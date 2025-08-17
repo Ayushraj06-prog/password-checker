@@ -35,23 +35,17 @@ else:
 def check_password_strength(password):
     suggestions = []
     score = 0
-    # Length
     if len(password) >= 12: score += 2
     elif len(password) >= 8: score += 1
     else: suggestions.append("Use at least 12 characters for better security.")
-    # Uppercase
     if re.search(r"[A-Z]", password): score += 1
     else: suggestions.append("Add uppercase letters.")
-    # Lowercase
     if re.search(r"[a-z]", password): score += 1
     else: suggestions.append("Add lowercase letters.")
-    # Numbers
     if re.search(r"[0-9]", password): score += 1
     else: suggestions.append("Include numbers.")
-    # Special characters
     if re.search(r"[@$!%*?&#]", password): score += 2
     else: suggestions.append("Use special characters (@, #, $, %, etc.).")
-    # Final strength
     if score <= 2: strength = "Weak"
     elif score <= 4: strength = "Moderate"
     elif score <= 6: strength = "Strong"
@@ -74,38 +68,41 @@ def generate_strong_password(length=16):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# ----------------- Password Form -----------------
+# --- Strong Password Generator (outside the form) ---
+if st.button("Generate Strong Password"):
+    password_generated = generate_strong_password()
+    st.session_state['pwd_input'] = password_generated
+    st.success("Strong password generated! Copy it from below.")
+    password = password_generated
+else:
+    password = st.session_state.get('pwd_input', '')
+
+# --- Password Form with Enter Button ---
 with st.form("password_form"):
-    password = st.text_input("Enter your password:", key="pwd_input")
+    password_input = st.text_input("Enter your password:", value=password, key="pwd_input_form")
     submitted = st.form_submit_button("Check Password")
-    if st.button("Generate Strong Password"):
-        password = generate_strong_password()
-        st.session_state['pwd_input'] = password
-        st.success("Strong password generated! You can copy it now.")
 
-# ----------------- Evaluation after Enter -----------------
-if submitted and password:
-    strength, score, suggestions = check_password_strength(password)
-    entropy = estimate_entropy(password)
-    progress = score/7
-    colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
+# --- Evaluation on Enter ---
+if submitted:
+    if password_input:
+        strength, score, suggestions = check_password_strength(password_input)
+        entropy = estimate_entropy(password_input)
+        progress = score / 7
+        colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
 
-    # Strength bar
-    st.markdown(f"""
-    <div style="background-color:#e0e0e0; border-radius:5px; padding:3px; margin-bottom:10px;">
-        <div style="width:{progress*100}%; background-color:{colors[strength]};
-        text-align:center; padding:5px 0; border-radius:5px; color:white;">{strength}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style="background-color:#e0e0e0; border-radius:5px; padding:3px; margin-bottom:10px;">
+            <div style="width:{progress*100}%; background-color:{colors[strength]};
+            text-align:center; padding:5px 0; border-radius:5px; color:white;">{strength}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # Entropy
-    st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
+        st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
 
-    # AI-style suggestions
-    if suggestions:
-        st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
-        for s in suggestions: st.markdown(f"- {s}")
+        if suggestions:
+            st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
+            for s in suggestions: st.markdown(f"- {s}")
+        else:
+            st.success("Your password is very strong! 🚀")
     else:
-        st.success("Your password is very strong! 🚀")
-elif submitted:
-    st.warning("Please enter a password first.")
+        st.warning("Please enter a password first.")
