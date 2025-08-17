@@ -13,22 +13,18 @@ mode = st.sidebar.radio("🌗 Choose Theme", ["Dark Mode", "Light Mode"])
 if mode == "Dark Mode":
     st.markdown("""
     <style>
-    @keyframes gradientBG {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     .stApp {background: linear-gradient(270deg,#1E3C72,#2A5298,#FF512F); background-size:600% 600%; animation: gradientBG 20s ease infinite; color:white;}
     h1,h2,h3,h4,label {color:#fff !important;}
     .glass-card {background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding: 20px; border-radius: 15px; margin-bottom: 15px; transition: all 0.3s ease;}
-    .glass-card:hover {transform: scale(1.02); box-shadow:0 8px 25px rgba(0,0,0,0.3);}
     .strength-bar {border-radius:10px; height:20px;}
     </style>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
     <style>
-    @keyframes gradientBG {0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
     .stApp {background: linear-gradient(270deg,#f8f9fa,#e9ecef,#dee2e6); background-size:600% 600%; animation: gradientBG 20s ease infinite; color:#000;}
     h1,h2,h3,h4,label {color:#000 !important;}
     .glass-card {background: rgba(255,255,255,0.4); backdrop-filter: blur(12px); padding: 20px; border-radius: 15px; margin-bottom: 15px; transition: all 0.3s ease;}
-    .glass-card:hover {transform: scale(1.02); box-shadow:0 8px 25px rgba(0,0,0,0.2);}
     .strength-bar {border-radius:10px; height:20px;}
     </style>
     """, unsafe_allow_html=True)
@@ -83,16 +79,16 @@ def copy_to_clipboard(text):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
+# --- Password Generator (Outside Form) ---
+length = st.slider("Password Length for Generator", 8, 24, 16)
+if st.button("Generate Strong Password"):
+    password_generated = generate_strong_password(length)
+    st.session_state['generated_password'] = password_generated
+    st.success("Strong password generated! ✅")
+
 # --- Password Form ---
 with st.form("password_form"):
-    password_input = st.text_input("Enter your password:", type="password")
-    col1, col2 = st.columns([2,1])
-    with col2:
-        length = st.slider("Generate Password Length", 8, 24, 16)
-        if st.form_submit_button("Generate Strong Password"):
-            password_input = generate_strong_password(length)
-            st.session_state['pwd_input_form'] = password_input
-    
+    password_input = st.text_input("Enter your password:", value=st.session_state.get('generated_password', ''), type="password")
     submitted = st.form_submit_button("Check Password")
 
 # --- Evaluation after Enter ---
