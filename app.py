@@ -83,26 +83,26 @@ def copy_to_clipboard(text):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# --- Layout Columns ---
-col1, col2 = st.columns([2,1])
+# --- Password Form ---
+with st.form("password_form"):
+    password_input = st.text_input("Enter your password:", type="password")
+    col1, col2 = st.columns([2,1])
+    with col2:
+        length = st.slider("Generate Password Length", 8, 24, 16)
+        if st.form_submit_button("Generate Strong Password"):
+            password_input = generate_strong_password(length)
+            st.session_state['pwd_input_form'] = password_input
+    
+    submitted = st.form_submit_button("Check Password")
 
-with col1:
-    password_input = st.text_input("Enter your password:", key="pwd_input_form", type="password")
-with col2:
-    length = st.slider("Password Length", 8, 24, 16)
-    if st.button("Generate Strong Password"):
-        password_input = generate_strong_password(length)
-        st.session_state['pwd_input_form'] = password_input
-        st.success("Strong password generated! ✅")
-
-# --- Real-time Evaluation ---
-if password_input:
+# --- Evaluation after Enter ---
+if submitted and password_input:
     strength, score, suggestions = check_password_strength(password_input)
     entropy = estimate_entropy(password_input)
     progress = score / 7
     colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
     
-    # Strength Bar
+    # Strength bar
     st.markdown(f"""
     <div class="strength-bar" style="background-color:#e0e0e0;">
         <div style="width:{progress*100}%; background-color:{colors[strength]}; text-align:center; padding:3px 0; color:white;">{strength}</div>
@@ -119,7 +119,7 @@ if password_input:
     else:
         st.success("Your password is very strong! 🚀")
     
-    # Copy Button
+    # Copy Button appears only after suggestions
     if st.button("📋 Copy Password"):
         copy_to_clipboard(password_input)
         st.success("Password copied to clipboard!")
