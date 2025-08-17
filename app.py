@@ -64,15 +64,27 @@ def generate_strong_password(length=16):
     chars = string.ascii_letters + string.digits + "@$!%*?&#"
     return ''.join(random.choices(chars, k=length))
 
+def copy_to_clipboard(text):
+    # JavaScript snippet to copy text
+    st.markdown(f"""
+    <input type="text" value="{text}" id="pwd_copy" style="opacity:0; position:absolute; left:-1000px;">
+    <script>
+    var copyText = document.getElementById("pwd_copy");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    </script>
+    """, unsafe_allow_html=True)
+
 # ----------------- UI -----------------
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# --- Strong Password Generator (outside form) ---
+# --- Strong Password Generator ---
 if st.button("Generate Strong Password"):
     password_generated = generate_strong_password()
     st.session_state['pwd_input'] = password_generated
-    st.success("Strong password generated! Copy it from below.")
+    st.success("Strong password generated! Copy it using the button below.")
     password = password_generated
 else:
     password = st.session_state.get('pwd_input', '')
@@ -108,11 +120,9 @@ if submitted:
         else:
             st.success("Your password is very strong! 🚀")
 
-        # --- Copy Button ---
+        # --- Real Copy Button ---
         if st.button("📋 Copy Password"):
-            st.experimental_set_query_params()  # workaround to refresh
-            st.write("Password copied to clipboard!")
-            st.experimental_set_clipboard(password_input)
-
+            copy_to_clipboard(password_input)
+            st.success("Password copied to clipboard!")
     else:
         st.warning("Please enter a password first.")
