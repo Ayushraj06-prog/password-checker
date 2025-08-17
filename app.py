@@ -79,43 +79,48 @@ def copy_to_clipboard(text):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# --- Password Generator (Outside Form) ---
+# --- Generator Options ---
 length = st.slider("Password Length for Generator", 8, 24, 16)
-if st.button("Generate Strong Password"):
+if st.button("Generate & Evaluate Strong Password"):
     password_generated = generate_strong_password(length)
-    st.session_state['generated_password'] = password_generated
-    st.success("Strong password generated! ✅")
+    st.session_state['password_input'] = password_generated
 
 # --- Password Form ---
 with st.form("password_form"):
-    password_input = st.text_input("Enter your password:", value=st.session_state.get('generated_password', ''), type="password")
+    password_input = st.text_input(
+        "Enter your password:", 
+        value=st.session_state.get('password_input', ''), 
+        type="password"
+    )
     submitted = st.form_submit_button("Check Password")
 
-# --- Evaluation after Enter ---
-if submitted and password_input:
-    strength, score, suggestions = check_password_strength(password_input)
-    entropy = estimate_entropy(password_input)
-    progress = score / 7
-    colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
-    
-    # Strength bar
-    st.markdown(f"""
-    <div class="strength-bar" style="background-color:#e0e0e0;">
-        <div style="width:{progress*100}%; background-color:{colors[strength]}; text-align:center; padding:3px 0; color:white;">{strength}</div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Entropy
-    st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
-    
-    # AI Suggestions
-    if suggestions:
-        st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
-        for s in suggestions: st.markdown(f"- {s}")
-    else:
-        st.success("Your password is very strong! 🚀")
-    
-    # Copy Button appears only after suggestions
-    if st.button("📋 Copy Password"):
-        copy_to_clipboard(password_input)
-        st.success("Password copied to clipboard!")
+# --- Evaluation (After Enter or Generation) ---
+if submitted or 'password_input' in st.session_state:
+    password_input = st.session_state.get('password_input', password_input)
+    if password_input:
+        strength, score, suggestions = check_password_strength(password_input)
+        entropy = estimate_entropy(password_input)
+        progress = score / 7
+        colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
+
+        # Strength bar
+        st.markdown(f"""
+        <div class="strength-bar" style="background-color:#e0e0e0;">
+            <div style="width:{progress*100}%; background-color:{colors[strength]}; text-align:center; padding:3px 0; color:white;">{strength}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Entropy
+        st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
+
+        # AI Suggestions
+        if suggestions:
+            st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
+            for s in suggestions: st.markdown(f"- {s}")
+        else:
+            st.success("Your password is very strong! 🚀")
+
+        # Copy Button
+        if st.button("📋 Copy Password"):
+            copy_to_clipboard(password_input)
+            st.success("Password copied to clipboard!")
