@@ -65,7 +65,6 @@ def generate_strong_password(length=16):
     return ''.join(random.choices(chars, k=length))
 
 def copy_to_clipboard(text):
-    # JavaScript snippet to copy text
     st.markdown(f"""
     <input type="text" value="{text}" id="pwd_copy" style="opacity:0; position:absolute; left:-1000px;">
     <script>
@@ -120,9 +119,12 @@ if submitted:
         else:
             st.success("Your password is very strong! 🚀")
 
-        # --- Real Copy Button ---
-        if st.button("📋 Copy Password"):
+        # --- Copy Button appears only after suggestions ---
+        st.markdown("---")
+        st.markdown("### 📋 Copy your password:")
+        if st.button("Copy Password"):
             copy_to_clipboard(password_input)
             st.success("Password copied to clipboard!")
+
     else:
         st.warning("Please enter a password first.")
