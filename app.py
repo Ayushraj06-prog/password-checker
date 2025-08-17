@@ -1,105 +1,108 @@
 import streamlit as st
 import re
-import random
-import string
 
-# ---------------- Page Setup ----------------
-st.set_page_config(page_title="🔐 Password Guardian", page_icon="🔑", layout="centered")
+# ----------------- Page Config -----------------
+st.set_page_config(page_title="Pass Guardian", page_icon="🔐", layout="centered")
 
-# ---------------- Custom CSS ----------------
-st.markdown("""
+# ----------------- Theme Toggle -----------------
+mode = st.sidebar.radio("🌗 Choose Theme", ["Dark Mode", "Light Mode"])
+
+if mode == "Dark Mode":
+    page_bg = """
     <style>
     .stApp {
-        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        background: linear-gradient(135deg, #1E3C72 0%, #2A5298 50%, #FF512F 100%);
         color: white;
     }
-    .stTextInput > div > div > input {
-        background-color: #1e1e2e;
-        color: white;
-    }
-    .stButton > button {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 8px;
-        padding: 10px 20px;
-        font-weight: bold;
-    }
-    .stButton > button:hover {
-        background-color: #45a049;
-        color: white;
+    h1, h2, h3, h4, label {
+        color: #fff !important;
     }
     </style>
-""", unsafe_allow_html=True)
+    """
+else:
+    page_bg = """
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
+        color: #000;
+    }
+    h1, h2, h3, h4, label {
+        color: #000 !important;
+    }
+    </style>
+    """
 
+st.markdown(page_bg, unsafe_allow_html=True)
 
-# ---------------- Password Strength Function ----------------
-def password_strength(password):
-    score = 0
-    if len(password) >= 8: score += 1
-    if re.search(r"[A-Z]", password): score += 1
-    if re.search(r"[a-z]", password): score += 1
-    if re.search(r"[0-9]", password): score += 1
-    if re.search(r"[@$!%*?&#]", password): score += 1
-    return score
-
-
-# ---------------- Password Suggestions ----------------
-def suggest_improvements(password):
+# ----------------- Password Strength Function -----------------
+def check_password_strength(password):
     suggestions = []
-    if len(password) < 8:
-        suggestions.append("➡️ Make it at least 8 characters long.")
-    if not re.search(r"[A-Z]", password):
-        suggestions.append("➡️ Add an uppercase letter (A-Z).")
-    if not re.search(r"[a-z]", password):
-        suggestions.append("➡️ Add a lowercase letter (a-z).")
-    if not re.search(r"[0-9]", password):
-        suggestions.append("➡️ Include numbers (0-9).")
-    if not re.search(r"[@$!%*?&#]", password):
-        suggestions.append("➡️ Use special characters (@, #, $, %, &).")
+    score = 0
 
-    if not suggestions:
-        suggestions.append("✅ Your password looks strong!")
-    return suggestions
+    # Length check
+    if len(password) >= 12:
+        score += 2
+    elif len(password) >= 8:
+        score += 1
+    else:
+        suggestions.append("Use at least 12 characters for better security.")
 
+    # Uppercase
+    if re.search(r"[A-Z]", password):
+        score += 1
+    else:
+        suggestions.append("Add uppercase letters.")
 
-# ---------------- Random Strong Password Generator ----------------
-def generate_password(length=12):
-    characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(random.choice(characters) for _ in range(length))
+    # Lowercase
+    if re.search(r"[a-z]", password):
+        score += 1
+    else:
+        suggestions.append("Add lowercase letters.")
 
+    # Numbers
+    if re.search(r"[0-9]", password):
+        score += 1
+    else:
+        suggestions.append("Include numbers.")
 
-# ---------------- Streamlit App ----------------
-st.title("🔐 Password Guardian")
-st.write("Check your password strength and get AI-powered suggestions for improvement.")
+    # Special characters
+    if re.search(r"[@$!%*?&#]", password):
+        score += 2
+    else:
+        suggestions.append("Use special characters (@, #, $, %, etc.).")
+
+    # Final Strength
+    if score <= 2:
+        strength = "Weak"
+    elif score <= 4:
+        strength = "Moderate"
+    elif score <= 6:
+        strength = "Strong"
+    else:
+        strength = "Very Strong"
+
+    return strength, score, suggestions
+
+# ----------------- UI -----------------
+st.title("🔐 Pass Guardian")
+st.subheader("AI-Enhanced Password Strength Checker")
 
 password = st.text_input("Enter your password:", type="password")
 
-if st.button("Check Strength"):
-    if password:
-        score = password_strength(password)
-        st.progress(score / 5)
+if password:
+    strength, score, suggestions = check_password_strength(password)
 
-        if score <= 2:
-            st.error("🔴 Weak Password")
-        elif score == 3:
-            st.warning("🟡 Medium Password")
-        else:
-            st.success("🟢 Strong Password")
+    # Progress bar (max score = 7)
+    progress = score / 7
+    st.progress(progress)
 
-        # Show analysis
-        st.write("### 🔍 Password Analysis")
-        st.write(f"- Length: {len(password)}")
-        st.write("✅ Uppercase" if re.search(r"[A-Z]", password) else "❌ No uppercase")
-        st.write("✅ Lowercase" if re.search(r"[a-z]", password) else "❌ No lowercase")
-        st.write("✅ Number" if re.search(r"[0-9]", password) else "❌ No number")
-        st.write("✅ Special Character" if re.search(r"[@$!%*?&#]", password) else "❌ No special character")
+    # Strength result
+    st.markdown(f"### ✅ Strength: **{strength}**")
 
-        # AI-like Suggestions
-        st.write("### 🤖 AI Suggestions")
-        for tip in suggest_improvements(password):
-            st.write(tip)
-
-# Generate random strong password
-if st.button("🔑 Generate Strong Password"):
-    new_password = generate_password()
-    st.success(f"Here’s a strong password: **{new_password}**")
+    # Suggestions
+    if suggestions:
+        st.markdown("### 🔎 Suggestions to Improve:")
+        for s in suggestions:
+            st.markdown(f"- {s}")
+    else:
+        st.success("Your password is very strong! 🚀")
