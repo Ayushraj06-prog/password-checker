@@ -68,7 +68,7 @@ def generate_strong_password(length=16):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# --- Strong Password Generator (outside the form) ---
+# --- Strong Password Generator (outside form) ---
 if st.button("Generate Strong Password"):
     password_generated = generate_strong_password()
     st.session_state['pwd_input'] = password_generated
@@ -90,6 +90,7 @@ if submitted:
         progress = score / 7
         colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
 
+        # Strength bar
         st.markdown(f"""
         <div style="background-color:#e0e0e0; border-radius:5px; padding:3px; margin-bottom:10px;">
             <div style="width:{progress*100}%; background-color:{colors[strength]};
@@ -97,12 +98,21 @@ if submitted:
         </div>
         """, unsafe_allow_html=True)
 
+        # Entropy
         st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
 
+        # AI-style suggestions
         if suggestions:
             st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
             for s in suggestions: st.markdown(f"- {s}")
         else:
             st.success("Your password is very strong! 🚀")
+
+        # --- Copy Button ---
+        if st.button("📋 Copy Password"):
+            st.experimental_set_query_params()  # workaround to refresh
+            st.write("Password copied to clipboard!")
+            st.experimental_set_clipboard(password_input)
+
     else:
         st.warning("Please enter a password first.")
