@@ -38,6 +38,16 @@ if mode == "Dark Mode":
         transform: scale(1.02);
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
+    .password-container {
+        position: relative;
+    }
+    .toggle-btn {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        cursor: pointer;
+        color: #888;
+    }
     </style>
     """
 else:
@@ -67,6 +77,16 @@ else:
     .glass-card:hover {
         transform: scale(1.02);
         box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .password-container {
+        position: relative;
+    }
+    .toggle-btn {
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        cursor: pointer;
+        color: #555;
     }
     </style>
     """
@@ -133,44 +153,57 @@ def generate_strong_password(length=16):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-show_password = st.checkbox("Show Password")
-password = st.text_input("Enter your password:", type="text" if show_password else "password")
+# ----------------- Password Input with Eye Icon -----------------
+password_placeholder = st.empty()
+password_value = ""
+show_password = False
+
+# Use a form to allow enter button submission
+with st.form(key="password_form"):
+    col1, col2 = st.columns([4,1])
+    with col1:
+        password_value = st.text_input("Enter your password:", type="password", key="pwd_input")
+    with col2:
+        show_password_checkbox = st.checkbox("👁️", key="eye_icon")
+        if show_password_checkbox:
+            password_value = st.text_input("Enter your password:", type="text", key="pwd_input_show")
+
+    submitted = st.form_submit_button("Check Password")
 
 if st.button("Generate Strong Password"):
-    password = generate_strong_password()
-    st.text_input("Generated Password:", value=password, key="gen_pass")
+    password_value = generate_strong_password()
+    st.text_input("Generated Password:", value=password_value, key="gen_pass")
 
-if st.button("Check Password"):
-    if password:
-        strength, score, suggestions = check_password_strength(password)
-        entropy = estimate_entropy(password)
+if submitted and password_value:
+    strength, score, suggestions = check_password_strength(password_value)
+    entropy = estimate_entropy(password_value)
 
-        progress = score / 7
-        strength_colors = {
-            "Weak": "#FF4B4B",
-            "Moderate": "#FFA500",
-            "Strong": "#FFD700",
-            "Very Strong": "#00C853"
-        }
+    progress = score / 7
+    strength_colors = {
+        "Weak": "#FF4B4B",
+        "Moderate": "#FFA500",
+        "Strong": "#FFD700",
+        "Very Strong": "#00C853"
+    }
 
-        st.markdown(
-            f"""
-            <div style="background-color: #e0e0e0; border-radius: 5px; padding: 3px; margin-bottom: 10px;">
-                <div style="width: {progress*100}%; background-color: {strength_colors[strength]}; 
-                            text-align: center; padding: 5px 0; border-radius: 5px; color: white;">
-                    {strength}
-                </div>
+    st.markdown(
+        f"""
+        <div style="background-color: #e0e0e0; border-radius: 5px; padding: 3px; margin-bottom: 10px;">
+            <div style="width: {progress*100}%; background-color: {strength_colors[strength]}; 
+                        text-align: center; padding: 5px 0; border-radius: 5px; color: white;">
+                {strength}
             </div>
-            """, unsafe_allow_html=True
-        )
+        </div>
+        """, unsafe_allow_html=True
+    )
 
-        st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
+    st.markdown(f"### 🔑 Entropy: **{entropy} bits**")
 
-        if suggestions:
-            st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
-            for s in suggestions:
-                st.markdown(f"- {s}")
-        else:
-            st.success("Your password is very strong! 🚀")
+    if suggestions:
+        st.markdown('<div class="glass-card"><h3>🔎 Suggestions to Improve:</h3></div>', unsafe_allow_html=True)
+        for s in suggestions:
+            st.markdown(f"- {s}")
     else:
-        st.warning("Please enter a password first.")
+        st.success("Your password is very strong! 🚀")
+elif submitted:
+    st.warning("Please enter a password first.")
