@@ -68,21 +68,19 @@ def generate_strong_password(length=16):
 st.title("🔐 Pass Guardian")
 st.subheader("AI-Enhanced Password Strength Checker")
 
-# Password input with eye toggle
-col1, col2 = st.columns([4,1])
-with col1:
-    show_password = st.checkbox("Show Password")
-    password = st.text_input("Enter your password:", type="text" if show_password else "password", key="pwd")
-with col2:
-    if st.button("Generate Strong Password"):
-        password = generate_strong_password()
-        st.session_state['pwd'] = password
+password = st.text_input("Enter your password:", key="pwd_input")
 
-# Live update strength
+# Strong password generator
+if st.button("Generate Strong Password"):
+    password = generate_strong_password()
+    st.session_state['pwd_input'] = password
+    st.success("Strong password generated! You can copy it now.")
+
+# Live password strength evaluation
 if password:
     strength, score, suggestions = check_password_strength(password)
     entropy = estimate_entropy(password)
-    progress = score/7
+    progress = score / 7
     colors = {"Weak":"#FF4B4B","Moderate":"#FFA500","Strong":"#FFD700","Very Strong":"#00C853"}
 
     st.markdown(f"""
